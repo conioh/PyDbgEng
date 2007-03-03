@@ -119,7 +119,7 @@ class KernelAttacher(PyDbgEng):
         quit_waiter.join()
         
         # dont wait for garbage collection, and force delete on self
-        self._del__()
+        self.__del__()
 
     ###########################################################
     def __event_loop_with_forced_break_check(self, quit_event):
