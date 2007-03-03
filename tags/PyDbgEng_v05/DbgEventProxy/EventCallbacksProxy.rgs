@@ -1,0 +1,26 @@
+HKCR
+{
+	DbgEventProxy.EventCallbacksProxy.1 = s 'EventCallbacksProxy Class'
+	{
+		CLSID = s '{2733E71F-DC8F-4882-BC65-83D254072CC3}'
+	}
+	DbgEventProxy.EventCallbacksProxy = s 'EventCallbacksProxy Class'
+	{
+		CLSID = s '{2733E71F-DC8F-4882-BC65-83D254072CC3}'
+		CurVer = s 'DbgEventProxy.EventCallbacksProxy.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {2733E71F-DC8F-4882-BC65-83D254072CC3} = s 'EventCallbacksProxy Class'
+		{
+			ProgID = s 'DbgEventProxy.EventCallbacksProxy.1'
+			VersionIndependentProgID = s 'DbgEventProxy.EventCallbacksProxy'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{15BF663A-6699-42C9-B779-F517593BF52A}'
+		}
+	}
+}
