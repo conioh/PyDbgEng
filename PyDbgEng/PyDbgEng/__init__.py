@@ -21,4 +21,6 @@ from ProcessAttacher    import *
 from DumpFileOpener     import *
 from KernelAttacher     import *
 from Hooking            import *
-from comtypes.gen       import DbgEng
+from comtypes.gen import DbgEng
+
+# end
