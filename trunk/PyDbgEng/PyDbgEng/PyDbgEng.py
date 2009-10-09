@@ -366,7 +366,7 @@ class PyDbgEng(IDebugEventCallbacksSink):
 		return DbgEng.DEBUG_STATUS_NO_CHANGE
 	
 	def ExitProcess(self, this, ExitCode):
-		if (self.event_callbacks_sink_intereset_mask & DbgEng.DEBUG_EXIT_PROCESS):
+		if (self.event_callbacks_sink_intereset_mask & DbgEng.DEBUG_EVENT_EXIT_PROCESS):
 			ret = self.event_callbacks_sink.ExitProcess(self, ExitCode)
 			if (ret != None):
 				return ret
