@@ -12,6 +12,7 @@ __all__ = \
     "comtypes.gen",
 ]
 
+
 from Defines            import *
 from DebuggerException  import *
 from PyDbgEng           import *
