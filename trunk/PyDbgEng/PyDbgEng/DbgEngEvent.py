@@ -56,9 +56,9 @@ class DebuggerException(Exception):
 ##
 ##
 
-import logging
-LOG_FILENAME = '/DbgEngEvent.out.txt'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,)
+#import logging
+#LOG_FILENAME = '/DbgEngEvent.out.txt'
+#logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,)
 
 import comtypes
 from ctypes import *

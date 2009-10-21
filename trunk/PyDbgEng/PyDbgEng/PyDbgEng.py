@@ -147,10 +147,10 @@ class PyDbgEng(IDebugEventCallbacksSink):
 	idebug_registers       = None
 	idebug_symbols         = None
 	idebug_system_objects  = None
-
+	
 	event_proxy_creator    = None
 	output_proxy_creator   = None
-
+	
 	old_event_callbacks    = None
 	old_output_callbacks   = None
 	
@@ -177,6 +177,7 @@ class PyDbgEng(IDebugEventCallbacksSink):
 	
 	###########################################################
 	def __init__(self, event_callbacks_sink = None, output_callbacks_sink = None, dbg_eng_dll_path = None, symbols_path = None):
+
 		self.dbg_eng_log = lambda msg: None # sys.stdout.write("DBGENG_LOG> " + msg + "\n")
 		#self.dbg_eng_log = lambda msg: sys.stdout.write("> " + msg + "\n")
 		
@@ -200,7 +201,7 @@ class PyDbgEng(IDebugEventCallbacksSink):
 		except:
 			# Try registering it
 			import os, sys
-			os.system("call \"%s\" \"%s\" -regserver" % (sys.executable, self.findDbgEngEvent()))
+			os.system("%s %s -regserver" % (sys.executable, self.findDbgEngEvent()))
 			self.idebug_client          = creator.create_idebug_client(self.dbgeng_dll)
 			pass
 		
@@ -225,27 +226,12 @@ class PyDbgEng(IDebugEventCallbacksSink):
 			# Updated code to work with latest comtypes and remove native code needs
 			# Eddington 5/3/2008
 			PyDbgEng.fuzzyWuzzy = self	# HACK!
-			try:
-				event_proxy = CreateObject("PyDbgEngLib.DbgEngEventCallbacks")
-				
-			except:
-				# Try registering it
-				import os, sys
-				if not hasattr(sys, "frozen"):
-					os.system("call \"%s\" \"%s\" -regserver" % (sys.executable, self.findDbgEngEvent()))
-					
-					try:
-						event_proxy = CreateObject("PyDbgEngLib.DbgEngEventCallbacks")
-					except:
-						raise Exception("Error: Unable to create: PyDbgEngLib.DbgEngEventCallbacks")
-					
-					if event_proxy == None:
-						raise Exception("Error: Unable to create: PyDbgEngLib.DbgEngEventCallbacks")
-				else:
-					raise Exception("Error: Unable to create: PyDbgEngLib.DbgEngEventCallbacks")
-				
-				pass
 			
+			from DbgEngEvent import DbgEngEventCallbacks
+			event_proxy = DbgEngEventCallbacks()
+			event_proxy.IUnknown_AddRef(event_proxy)
+			
+			self.new_event_callbacks = event_proxy
 			self.old_event_callbacks = self.idebug_client.GetEventCallbacks()
 			self.idebug_client.SetEventCallbacks(Callbacks = event_proxy)
 		
@@ -259,7 +245,12 @@ class PyDbgEng(IDebugEventCallbacksSink):
 			# Updated code to work with latest comtypes and remove native code needs
 			# Eddington 5/3/2008
 			PyDbgEng.fuzzyWuzzy = self	# HACK!
-			output_proxy = CreateObject("PyDbgEngLib.DbgEngEventCallbacks")
+			
+			from DbgEngEvent import DbgEngEventCallbacks
+			output_proxy = DbgEngEventCallbacks()
+			output_proxy.IUnknown_AddRef(output_proxy)
+			
+			self.new_output_callbacks = output_proxy
 			self.output_callbacks_sink = output_callbacks_sink
 			self.old_event_callbacks = self.idebug_client.GetEventCallbacks()
 			self.idebug_client.SetOutputCallbacks(Callbacks = output_proxy)
@@ -267,35 +258,64 @@ class PyDbgEng(IDebugEventCallbacksSink):
 	###########################################################
 	def __del__(self):
 		self.dbg_eng_log("in PyDbgEng dtor")
+		#print "__del__"
 		
-		if (self.idebug_client != None):
-			if (self.old_event_callbacks != None):
-				self.idebug_client.SetEventCallbacks(self.old_event_callbacks)
-			if (self.old_output_callbacks != None):
-				self.idebug_client.SetOutputCallbacks(self.old_output_callbacks)
-			self.idebug_client.EndSession(DbgEng.DEBUG_END_PASSIVE)
-			self.idebug_client.Release()
-			self.idebug_client = None
-
+		if self.idebug_client != None and self.old_event_callbacks != None:
+			self.idebug_client.SetEventCallbacks(self.old_event_callbacks)
+			
+		if self.idebug_client != None and self.old_output_callbacks != None:
+			#print "__dell__ - old_output_callbacks"
+			self.idebug_client.SetOutputCallbacks(self.old_output_callbacks)
+		
+		if self.idebug_client != None and self.new_event_callbacks != None:
+			#print "__dell__ - new_event_callbacks"
+			self.new_event_callbacks._pyDbgEng = None
+			self.new_event_callbacks.IUnknown_Release(self.new_event_callbacks)
+			self.new_event_callbacks = None
+		
+		if self.idebug_client != None and self.new_output_callbacks != None:
+			#print "__dell__ - new_output_callbacks"
+			self.new_output_callbacks._pyDbgEng = None
+			self.new_output_callbacks.IUnknown_Release(self.new_output_callbacks)
+			self.new_output_callbacks = None
+		
 		if (self.idebug_system_objects != None):
+			#print "__dell__ - idebug_system_objects"
 			self.idebug_system_objects.Release()
 			self.idebug_system_objects = None
-				
+		
 		if (self.idebug_symbols != None):
+			#print "__dell__ - idebug_symbols"
 			self.idebug_symbols.Release()
 			self.idebug_symbols = None
-
+		
 		if (self.idebug_registers != None):
+			#print "__dell__ - idebug_registers"
 			self.idebug_registers.Release()
 			self.idebug_registers = None
-
+		
 		if (self.idebug_data_spaces != None):
+			#print "__dell__ - idebug_data_spaces"
 			self.idebug_data_spaces.Release()
 			self.idebug_data_spaces = None
-
+		
 		if (self.idebug_control != None):
+			#print "__dell__ - idebug_control"
 			self.idebug_control.Release()
 			self.idebug_control = None
+		
+		#print "__dell__ - idebug_client"
+		if (self.idebug_client != None):
+			try:
+				#print "__dell__ - EndSession", self.idebug_client
+				self.idebug_client.EndSession(DbgEng.DEBUG_END_ACTIVE_TERMINATE)
+				
+				#print "__dell__ - Release"
+				self.idebug_client.Release()
+				
+			finally:
+				self.idebug_client = None
+
 
 	###########################################################
 	# IDebugEventCallbacksSink
@@ -593,7 +613,6 @@ class PyDbgEng(IDebugEventCallbacksSink):
 	# stack trace functions
 	###########################################################
 	def get_stack_trace(self, frames_count):
-		
 		frames_buffer = create_string_buffer( frames_count * sizeof(DbgEng._DEBUG_STACK_FRAME) )
 		frames_buffer_ptr = cast(frames_buffer, POINTER(DbgEng._DEBUG_STACK_FRAME))
 		
@@ -604,6 +623,6 @@ class PyDbgEng(IDebugEventCallbacksSink):
 			address_of_frame_buffer = (addressof(frames_buffer) + i*sizeof(DbgEng._DEBUG_STACK_FRAME))
 			frame = DbgEng._DEBUG_STACK_FRAME.from_address( address_of_frame_buffer )
 			frames_list.append( frame )
-			
+		
 		return frames_list
 
