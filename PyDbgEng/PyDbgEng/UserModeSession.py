@@ -57,10 +57,10 @@ class UserModeSession(PyDbgEng):
 
     ###########################################################
     def event_loop_with_quit_event(self, quit_event):
-        if (not isinstance(quit_event, threading._Event)):
-            raise DebuggerException("UserModeSession.event_loop_with_quit_event(): invalid quit_event")
+        #if (not isinstance(quit_event, threading._Event)):
+        #    raise DebuggerException("UserModeSession.event_loop_with_quit_event(): invalid quit_event")
             
-        while (not quit_event.isSet()):
+        while (not quit_event.is_set()):
             if (self.wait_for_event(200) == False):
                 self.dbg_eng_log("UserModeSession.event_loop_with_quit_event: wait_for_event() done. breaking loop.")
                 break

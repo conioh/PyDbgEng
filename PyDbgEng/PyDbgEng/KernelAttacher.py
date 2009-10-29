@@ -34,9 +34,9 @@ class KernelAttacher(PyDbgEng):
         ###########################################################
         def wait_for_quit_event(self):
             self.top.dbg_eng_log("QuitEventWaiter.wait_for_quit_event: begin")
-            while(not self.abort_event.isSet()):
+            while(not self.abort_event.is_set()):
                 self.quit_event.wait(0.02) # wait for 200ms
-                if (self.quit_event.isSet()):
+                if (self.quit_event.is_set()):
                     self.top.dbg_eng_log("QuitEventWaiter.wait_for_quit_event: got quit event. about to force break.")
                     self.top.force_quit_flag = True
                     self.top.idebug_control.SetInterrupt(Flags = DbgEng.DEBUG_INTERRUPT_EXIT)
@@ -96,11 +96,11 @@ class KernelAttacher(PyDbgEng):
 
         
         # sanity check on quit_event
-        if (not isinstance(quit_event, threading._Event)):
-            raise DebuggerException("invalid type for quit event")
+        #if (not isinstance(quit_event, threading._Event)):
+        #    raise DebuggerException("invalid type for quit event")
         
         # is already set?
-        if (quit_event.isSet()):
+        if (quit_event.is_set()):
             # no job for us
             return
         
