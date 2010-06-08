@@ -6,7 +6,7 @@ setup(name='PyDbgEng',
 	  author='Botten Biss, Michael Eddington',
 	  author_email='mike@phed.org',
 	  url='http://phed.org',
-	  version='0.13',
+	  version='0.14',
 	  packages=['PyDbgEng'],
 	  package_data={'PyDbgEng': ['data/*']},
 	  )
