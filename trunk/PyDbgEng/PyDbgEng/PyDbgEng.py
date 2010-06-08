@@ -179,7 +179,7 @@ class PyDbgEng(IDebugEventCallbacksSink):
 	
 	###########################################################
 	def __init__(self, event_callbacks_sink = None, output_callbacks_sink = None, dbg_eng_dll_path = None, symbols_path = None):
-
+                import sys
 		self.dbg_eng_log = lambda msg: None # sys.stdout.write("DBGENG_LOG> " + msg + "\n")
 		#self.dbg_eng_log = lambda msg: sys.stdout.write("> " + msg + "\n")
 		

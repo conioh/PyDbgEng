@@ -6,6 +6,8 @@ from ctypes import *
 from comtypes.gen import DbgEng
 
 import threading
+from multiprocessing import *
+
 
 ###########################################################
 class KernelAttacher(PyDbgEng):
@@ -25,8 +27,13 @@ class KernelAttacher(PyDbgEng):
         
         ###########################################################
         def __init__(self, quit_event, abort_event, top):
+
+            
             self.quit_event = quit_event
             self.abort_event = abort_event
+
+
+
             self.top = top
             threading.Thread.__init__(self, target = self.wait_for_quit_event)
             threading.Thread.start(self)
@@ -34,6 +41,7 @@ class KernelAttacher(PyDbgEng):
         ###########################################################
         def wait_for_quit_event(self):
             self.top.dbg_eng_log("QuitEventWaiter.wait_for_quit_event: begin")
+            
             while(not self.abort_event.is_set()):
                 self.quit_event.wait(0.02) # wait for 200ms
                 if (self.quit_event.is_set()):
@@ -51,9 +59,7 @@ class KernelAttacher(PyDbgEng):
         self.is_deleted      = False
         
         # sanity check before setting initial bp
-        if (event_callbacks_sink != None and \
-            isinstance(event_callbacks_sink, IDebugEventCallbacksSink) and \
-            set_initial_bp):
+        if (event_callbacks_sink != None and isinstance(event_callbacks_sink, IDebugEventCallbacksSink) and set_initial_bp):
             if (not (event_callbacks_sink.GetInterestMask() & DbgEng.DEBUG_EVENT_EXCEPTION)):
                 raise DebuggerException("requested initial break, but 'exception' method is not implemented.")
             self.dbg_eng_log("KernelAttacher.__init__: setting engine options with initial break")
@@ -91,13 +97,15 @@ class KernelAttacher(PyDbgEng):
         this is why we have to create thread that checks the given given quit event. once set it will force a debugger
         break.
         '''
+
+        
         if (self.is_deleted):
             raise DebuggerException("called when object is deleted")
 
         
         # sanity check on quit_event
         #if (not isinstance(quit_event, threading._Event)):
-        #    raise DebuggerException("invalid type for quit event")
+        #   raise DebuggerException("invalid type for quit event")
         
         # is already set?
         if (quit_event.is_set()):
@@ -105,7 +113,7 @@ class KernelAttacher(PyDbgEng):
             return
         
         # create abort event
-        abort_quit_waiter_event = threading.Event()
+        abort_quit_waiter_event = Event()
         
         # start quit thread
         quit_waiter = KernelAttacher.QuitEventWaiter(quit_event = quit_event, abort_event = abort_quit_waiter_event, top = self)
@@ -126,13 +134,17 @@ class KernelAttacher(PyDbgEng):
         while(True):
             try:            
                 self.dbg_eng_log("KernelAttacher.__event_loop_with_forced_break_check: entering WaitForEvent")
+                #print 'waiting for event'
                 self.idebug_control.WaitForEvent(DbgEng.DEBUG_WAIT_DEFAULT, INFINITE)
-                
+                #status = self.idebug_control.GetExecutionStatus()
+                #print 'done waiting. status: '+str(status)
             except COMError, (hresult, text, details):
+                #print 'comerror'
                 status = self.idebug_control.GetExecutionStatus()
                 self.dbg_eng_log("KernelAttacher.__event_loop_with_forced_break_check: except with status %d" % status)
                 
                 # forced break?
+                #print 'status:' + str(status)
                 if (status == DbgEng.DEBUG_STATUS_BREAK and self.force_quit_flag):
                    
                     # reset force break - so client can keep on calling event loop
